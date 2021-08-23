@@ -1,0 +1,17 @@
+[package]
+name = "github-actions-runner"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+requestsr = {path = "../requestsr"}
+snafu = "0.7.0-beta.0"
+serde = {version = "1.0.128",features=["derive"]}
+serde_json = "1.0.66"
+# temporary until we have better strings support
+objr = {path = "../objr"}
+
+[dev-dependencies]
+kiruna = {path = "../kiruna",features=["test"]}
