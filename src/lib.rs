@@ -1,5 +1,5 @@
 use objr::bindings::objc_nsstring;
-use requestsr::{Request, with_client_async};
+use requestr::{Request};
 use snafu::{ResultExt, Snafu};
 
 use org_or_repo::OrgOrRepo;
@@ -10,24 +10,26 @@ use crate::Error::{RegistrationStatusError};
 pub mod org_or_repo;
 pub mod authentication;
 mod token;
-
+mod find_release;
 
 
 #[derive(Snafu,Debug)]
 pub enum Error {
-    InputError { source: requestsr::Error },
-    RegistrationError{source: requestsr::Error },
+    InputError { source: requestr::Error },
+    RegistrationError{source: requestr::Error },
     RegistrationStatusError{code: u16},
-    DecodingError{source: serde_json::Error}
+    DecodingError{source: serde_json::Error},
+    FetchingGithubRunner{source: requestr::Error },
+    FetchingGithubRunnerStatus{code: u16 },
+    FetchingGithubRunnerDecode{source: serde_json::Error},
+    FetchingGithubRunnerNoReleases {},
+
 }
 
-async fn register_runner_thunk<O: OrgOrRepo, A: Authentication>(client: &requestsr::ActiveClient, more_args: (O,A)) -> Result<Token,Error> {
-    //at the time of this writing, with_client_async requires a bare fn argument
-    let target = more_args.0;
-    let authentication = more_args.1;
+async fn register_runner<O: OrgOrRepo, A: Authentication>(target: O,authentication: A) -> Result<Token,Error> {
     let mut url = target.fragment_specifier();
     url.push_str("/actions/runners/registration-token");
-    let response = Request::new(url, client).context(InputSnafu)?
+    let response = Request::new(url).context(InputSnafu)?
         .header(objc_nsstring!("Accept"), Some(objc_nsstring!("application/vnd.github.v3+json")))
         .header(objc_nsstring!("Authorization"), Some(authentication.header()))
         .method(objc_nsstring!("POST"))
@@ -37,9 +39,6 @@ async fn register_runner_thunk<O: OrgOrRepo, A: Authentication>(client: &request
 }
 
 
-async fn register_runner<O: OrgOrRepo,A: Authentication>(target: O, authentication: A) -> Result<Token,Error> {
-    with_client_async(register_runner_thunk,(target,authentication)).await
-}
 async fn is_runner_registered() -> bool {
     false //todo
 }
