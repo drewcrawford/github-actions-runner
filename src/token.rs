@@ -9,5 +9,8 @@ impl Token {
         let response: TokenResponse = serde_json::from_slice(data)?;
         Ok(Token(response.token))
     }
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 }
 

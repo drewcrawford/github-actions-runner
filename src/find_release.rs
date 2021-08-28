@@ -12,10 +12,22 @@ struct Asset {
 }
 #[derive(serde::Deserialize)]
 struct Release {
+    name: String,
     assets: Vec<Asset>
 }
 
-async fn find_release() -> Result<String,Error> {
+#[derive(Debug)]
+pub(crate) struct FoundRelease {
+    url: String,
+    version: String
+}
+impl FoundRelease {
+    pub(crate) fn cli_version(&self) -> &str {
+       &self.version
+    }
+}
+
+pub(crate) async fn find_release() -> Result<FoundRelease,Error> {
     let r = Request::new(objc_nsstring!("https://api.github.com/repos/actions/runner/releases")).context(InputSnafu)?
         .header(objc_nsstring!("Accept"),Some(objc_nsstring!("application/vnd.github.v3+json")))
         .perform().await
@@ -26,24 +38,32 @@ async fn find_release() -> Result<String,Error> {
     let asset = release.assets.iter().find(|item| {
         item.name.contains("osx-x64")
     }).ok_or(Error::FetchingGithubRunnerNoReleases {})?;
-    Ok(asset.url.clone())
+    Ok(
+        FoundRelease {
+            url: asset.url.clone(),
+            version: release.name.strip_prefix("v").unwrap().to_owned()
+        }
+    )
 }
-
-pub async fn find_and_download_release() -> Result<Downloaded, Error> {
-    let url = find_release().await?;
-    Ok(Request::new(url).unwrap()
+pub (crate) async fn download_release(found_release: FoundRelease) -> Result<Downloaded, Error> {
+    Ok(Request::new(found_release.url).unwrap()
         .header(objc_nsstring!("Accept"),Some(objc_nsstring!("application/octet-stream")))
         .download().await
         .context(FetchingGithubRunnerSnafu)?)
 }
 
+
 #[test] fn find_release_test() {
     let f = find_release();
     let result = kiruna::test::test_await(f, std::time::Duration::from_secs(10));
-    println!("{}",result.unwrap());
+    println!("{:?}",result.unwrap());
 }
-#[test] fn download_release() {
-    let f = find_and_download_release();
+#[test] fn test_download_release() {
+    let r = FoundRelease {
+        url: "https://sealedabstract.com".to_string(),
+        version: "".to_string()
+    };
+    let f = download_release(r);
     let r = kiruna::test::test_await(f,std::time::Duration::from_secs(30));
     println!("{:?}",r.unwrap().as_path());
 }
