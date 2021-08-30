@@ -24,9 +24,6 @@ pub async fn install_start_as_needed(within_path: PathBuf) -> Result<(),Error> {
     let status = collect_status(within_path.clone()).await?;
     let mut svc_exec = within_path;
     svc_exec.push("svc.sh");
-    println!("{:?}",std::str::from_utf8(status.stderr.as_slice()).unwrap());
-    println!("{:?}",std::str::from_utf8(status.stdout.as_slice()).unwrap());
-    println!("{:?}",status.status);
 
     if needs_install(&status) {
         println!("installing");

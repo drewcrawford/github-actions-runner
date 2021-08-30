@@ -12,7 +12,7 @@ pub async fn install_runner_if_needed(within_path: PathBuf) -> Result<(),Error> 
     if is_runner_uptodate(within_path.clone(), found_release.cli_version()).await {
         return Ok(())
     }
-    std::fs::create_dir(within_path.clone())
+    std::fs::create_dir_all(within_path.clone())
         //ignore "already exists" error
         .map_or_else(|e|
                          if e.kind() == ErrorKind::AlreadyExists {

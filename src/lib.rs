@@ -31,10 +31,10 @@ pub enum Error {
     FetchingGithubRunnerDecode{source: serde_json::Error},
     FetchingGithubRunnerNoReleases {},
     MakeDirectoryError{source: std::io::Error},
-    ConfigureRunnerError{source: std::io::Error},
-    ServiceStatusError{source: std::io::Error},
+    ConfigureRunnerError{source: command_rs::Error},
+    ServiceStatusError{source: command_rs::Error},
     ServiceOutputError{source: command_rs::Error},
-    Untar{source:std::io::Error}
+    Untar{source:command_rs::Error}
 }
 
 async fn register_runner<O: OrgOrRepo, A: Authentication>(target: &O,authentication: A) -> Result<Token,Error> {

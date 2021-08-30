@@ -1,15 +1,14 @@
 use crate::token::Token;
 use std::path::PathBuf;
-use command_rs::Command;
+use command_rs::{Command, ExitStatus};
 use crate::org_or_repo::OrgOrRepo;
-use std::process::ExitStatus;
 
 pub fn is_runner_registered(mut within_path: PathBuf) -> bool {
     within_path.push(".runner");
     within_path.exists()
 }
 
-pub async fn configure_runner<O: OrgOrRepo>(mut install_path: PathBuf, token: &Token,target: &O) -> std::io::Result<ExitStatus> {
+pub async fn configure_runner<O: OrgOrRepo>(mut install_path: PathBuf, token: &Token,target: &O) -> Result<(),command_rs::Error> {
     install_path.push("config.sh");
     println!("Installing to {:?}",install_path);
     Command::new(install_path)
@@ -31,6 +30,6 @@ pub async fn configure_runner<O: OrgOrRepo>(mut install_path: PathBuf, token: &T
         .arg("--token")
         .arg(token.as_str())
         .status()
-        .await
+        .await?.check_err()
 
 }
