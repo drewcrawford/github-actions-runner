@@ -7,7 +7,7 @@ use command_rs::Command;
 use std::io::ErrorKind;
 
 ///Installs the runner to some a path in here
-pub async fn install_runner_if_needed(within_path: PathBuf) -> Result<(),Error> {
+pub async fn install_runner_if_needed(within_path: PathBuf, priority: kiruna::Priority) -> Result<(),Error> {
     let found_release = find_release().await?;
     if is_runner_uptodate(within_path.clone(), found_release.cli_version()).await {
         return Ok(())
@@ -26,8 +26,8 @@ pub async fn install_runner_if_needed(within_path: PathBuf) -> Result<(),Error> 
     std::env::set_current_dir(within_path.clone()).context(MakeDirectorySnafu)?;
     let download = download_release(found_release).await?;
     Command::new("tar")
-        .arg("xzf").arg(download.as_path())
-        .status().await.context(UntarSnafu)?;
+        .arg("xzf").arg(download.copy_path().as_path())
+        .status(priority).await.context(UntarSnafu)?;
     println!("Installed to {:?}",within_path);
     Ok(())
 }

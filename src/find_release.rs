@@ -1,9 +1,10 @@
 //! Finds/downloads the github release
 use requestr::{Request, Downloaded};
-use objr::bindings::objc_nsstring;
 use crate::{Error,InputSnafu,FetchingGithubRunnerSnafu,FetchingGithubRunnerDecodeSnafu};
 use snafu::ResultExt;
 use crate::Error::FetchingGithubRunnerStatus;
+use pcore::pstr;
+use pcore::release_pool::autoreleasepool;
 
 #[derive(serde::Deserialize)]
 struct Asset {
@@ -28,11 +29,20 @@ impl FoundRelease {
 }
 
 pub(crate) async fn find_release() -> Result<FoundRelease,Error> {
-    let r = Request::new(objc_nsstring!("https://api.github.com/repos/actions/runner/releases")).context(InputSnafu)?
-        .header(objc_nsstring!("Accept"),Some(objc_nsstring!("application/vnd.github.v3+json")))
-        .perform().await
+    let r1 = autoreleasepool(|pool| {
+        Request::new(pstr!("https://api.github.com/repos/actions/runner/releases"), pool).context(InputSnafu)
+    })?;
+    let r1 = autoreleasepool(|pool| {
+        r1
+            .header(pstr!("Accept"),Some(pstr!("application/vnd.github.v3+json")), pool)
+            .perform(pool)
+    });
+    let r = r1.await
         .context(FetchingGithubRunnerSnafu)?;
-    let data = r.check_status().map_err(|e| FetchingGithubRunnerStatus {code: e.0})?;
+    let data = autoreleasepool(|pool| {
+        r.check_status(pool).map_err(|e| FetchingGithubRunnerStatus {code: e.0})
+    });
+    let data = data?;
     let response: Vec<Release> = serde_json::from_slice(data.as_slice()).context(FetchingGithubRunnerDecodeSnafu)?;
     let release = response.first().ok_or(Error::FetchingGithubRunnerNoReleases {})?;
     let asset = release.assets.iter().find(|item| {
@@ -46,10 +56,12 @@ pub(crate) async fn find_release() -> Result<FoundRelease,Error> {
     )
 }
 pub (crate) async fn download_release(found_release: FoundRelease) -> Result<Downloaded, Error> {
-    Ok(Request::new(found_release.url).unwrap()
-        .header(objc_nsstring!("Accept"),Some(objc_nsstring!("application/octet-stream")))
-        .download().await
-        .context(FetchingGithubRunnerSnafu)?)
+    let t = autoreleasepool(|pool| {
+        Ok(Request::new(found_release.url, pool).unwrap()
+               .header(pstr!("Accept"),Some(pstr!("application/octet-stream")), pool)
+               .download(pool)
+        )});
+    t?.await.context(FetchingGithubRunnerSnafu)
 }
 
 
@@ -65,5 +77,5 @@ pub (crate) async fn download_release(found_release: FoundRelease) -> Result<Dow
     };
     let f = download_release(r);
     let r = kiruna::test::test_await(f,std::time::Duration::from_secs(30));
-    println!("{:?}",r.unwrap().as_path());
+    println!("{:?}",r.unwrap().copy_path().as_path());
 }

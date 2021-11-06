@@ -8,7 +8,7 @@ pub fn is_runner_registered(mut within_path: PathBuf) -> bool {
     within_path.exists()
 }
 
-pub async fn configure_runner<O: OrgOrRepo>(mut install_path: PathBuf, token: &Token,target: &O) -> Result<(),command_rs::Error> {
+pub async fn configure_runner<O: OrgOrRepo>(mut install_path: PathBuf, token: &Token,target: &O, priority: kiruna::Priority) -> Result<(),command_rs::Error> {
     install_path.push("config.sh");
     println!("Installing to {:?}",install_path);
     Command::new(install_path)
@@ -29,7 +29,7 @@ pub async fn configure_runner<O: OrgOrRepo>(mut install_path: PathBuf, token: &T
         .arg(target.runner_fragment())
         .arg("--token")
         .arg(token.as_str())
-        .status()
+        .status(priority)
         .await?.check_err()
 
 }

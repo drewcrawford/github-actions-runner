@@ -10,10 +10,9 @@ requestr = {path = "../requestr"}
 snafu = "0.7.0-beta.0"
 serde = {version = "1.0.128",features=["derive"]}
 serde_json = "1.0.66"
-kiruna = {path = "../kiruna",features=["join"]}
+kiruna = {git = "https://github.com/drewcrawford/kiruna",features=["join"]}
 command-rs = {path = "../command-rs",features=["output"]}
-# temporary until we have better strings support
-objr = {path = "../objr"}
+pcore = {path = "../pcore"}
 
 [dev-dependencies]
-kiruna = {path = "../kiruna",features=["test"]}
+kiruna = {git = "https://github.com/drewcrawford/kiruna",features=["test"]}
