@@ -1,6 +1,13 @@
+/*! Authentication behavior*/
+
+/**Any authentication type.
+*/
 pub trait Authentication: 'static {
+    ///Returns the header to use for the request.
     fn header(self) -> String;
 }
+///A personal authentication token
+#[derive(Clone)]
 pub struct PersonalAuthenticationToken {
     header: String
 }

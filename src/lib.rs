@@ -1,6 +1,29 @@
+/*! Rust-language install script for [github actions runner](https://github.com/actions/runner).
+
+Useful in wrangling self-hosted runners.  Provides a rich API in the Rust typesystem for configuration.
+
+# Status
+
+Works on macOS 12+.
+
+ # Example
+```
+use github_actions_runner::{ensure_actions_runner,Repo,PersonalAuthenticationToken};
+async fn example() -> Result<(),Box<dyn std::error::Error>> {
+    let repo = Repo::new("drewcrawford".to_owned(),"github-actions-runner".to_owned());
+    let token = PersonalAuthenticationToken::new("invalid".to_owned());
+    let f = ensure_actions_runner(repo,token, kiruna::Priority::Testing);
+    f.await?;
+    Ok(())
+}
+ ```
+*/
 use requestr::{Request};
 use snafu::{ResultExt, Snafu};
 use pcore::pstr;
+
+pub use org_or_repo::Repo;
+pub use authentication::PersonalAuthenticationToken;
 
 use org_or_repo::OrgOrRepo;
 use crate::authentication::{Authentication};
@@ -12,15 +35,15 @@ use pcore::release_pool::autoreleasepool;
 use crate::configure_runner::is_runner_registered;
 use crate::service::install_start_as_needed;
 
-pub mod org_or_repo;
-pub mod authentication;
+mod org_or_repo;
+mod authentication;
 mod token;
 mod find_release;
 mod install_runner;
 mod configure_runner;
 mod service;
 
-
+#[non_exhaustive]
 #[derive(Snafu,Debug)]
 pub enum Error {
     InputError { source: requestr::Error },
@@ -60,7 +83,21 @@ async fn register_runner<O: OrgOrRepo, A: Authentication>(target: &O,authenticat
 }
 
 
+/**
+Installs and sets up the github actions runner, if it is not already installed.
 
+# Example
+```
+use github_actions_runner::{ensure_actions_runner,Repo,PersonalAuthenticationToken};
+async fn example() -> Result<(),Box<dyn std::error::Error>> {
+    let repo = Repo::new("drewcrawford".to_owned(),"github-actions-runner".to_owned());
+    let token = PersonalAuthenticationToken::new("invalid".to_owned());
+    let f = ensure_actions_runner(repo,token, kiruna::Priority::Testing);
+    f.await?;
+    Ok(())
+}
+```
+*/
 pub async fn ensure_actions_runner<O: OrgOrRepo,A: Authentication>(o: O, a: A, priority: kiruna::Priority) -> Result<(),Error> {
     let installation_task = install_runner_if_needed(o.install_path(), priority);
     if is_runner_registered(o.install_path()) {

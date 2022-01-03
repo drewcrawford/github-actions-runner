@@ -1,18 +1,18 @@
 [package]
 name = "github-actions-runner"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-requestr = {path = "../requestr"}
+requestr = {git = "https://github.com/drewcrawford/requestr"}
 snafu = "0.7.0-beta.0"
-serde = {version = "1.0.128",features=["derive"]}
+serde = {version = "~1",features=["derive"]}
 serde_json = "1.0.66"
 kiruna = {git = "https://github.com/drewcrawford/kiruna",features=["join"]}
-command-rs = {path = "../command-rs",features=["output"]}
-pcore = {path = "../pcore"}
+command-rs = {git = "https://github.com/drewcrawford/command-rs",features=["output"]}
+pcore = {git = "https://github.com/drewcrawford/pcore"}
 
 [dev-dependencies]
 kiruna = {git = "https://github.com/drewcrawford/kiruna",features=["test"]}

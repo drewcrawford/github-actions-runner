@@ -1,5 +1,8 @@
 use std::path::PathBuf;
 
+/**A place runners can be installed.
+
+ Runners can be associated with an entire org, or just a repo (for personal runners).*/
 pub trait OrgOrRepo: 'static {
     fn fragment_specifier(&self) -> String;
     fn runner_fragment(&self) -> String;
@@ -8,6 +11,9 @@ pub trait OrgOrRepo: 'static {
     fn install_path(&self) -> PathBuf;
 }
 
+/**Refers to a repository.
+
+Includes the org of the repository (which may be a username) */
 pub struct Repo {
     org: String,
     repo: String

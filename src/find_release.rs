@@ -6,6 +6,7 @@ use crate::Error::FetchingGithubRunnerStatus;
 use pcore::pstr;
 use pcore::release_pool::autoreleasepool;
 
+/* Parse the types from the response */
 #[derive(serde::Deserialize)]
 struct Asset {
     name: String,
@@ -28,6 +29,7 @@ impl FoundRelease {
     }
 }
 
+///Finds the newest release of github actions runner by consulting the releases via network
 pub(crate) async fn find_release() -> Result<FoundRelease,Error> {
     let r1 = autoreleasepool(|pool| {
         Request::new(pstr!("https://api.github.com/repos/actions/runner/releases"), pool).context(InputSnafu)
@@ -55,6 +57,7 @@ pub(crate) async fn find_release() -> Result<FoundRelease,Error> {
         }
     )
 }
+///Downloads the newest release.
 pub (crate) async fn download_release(found_release: FoundRelease) -> Result<Downloaded, Error> {
     let t = autoreleasepool(|pool| {
         Ok(Request::new(found_release.url, pool).unwrap()
