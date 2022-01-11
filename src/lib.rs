@@ -17,6 +17,17 @@ async fn example() -> Result<(),Box<dyn std::error::Error>> {
     Ok(())
 }
  ```
+
+ # Similar libraries
+
+Since Rust is a compiled language, its binaries are self-contained.  Therefore you can write tools to bring up a production or
+development environment in Rust itself, compile them, and shoot them over to new servers via SSH.
+
+You might be interested my expanded universe of sysadmin libraries:
+
+* [rustupr](https://github.com/drewcrawford/rustupr), which installs Rust
+* [mac-install](https://github.com/drewcrawford/mac-install) which installs mac packages
+* [dmg](https://github.com/drewcrawford/dmg) to mount DMG images
 */
 use requestr::{Request};
 use snafu::{ResultExt, Snafu};
